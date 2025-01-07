@@ -32,7 +32,7 @@ public class Rq {
         );
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                username,
+                user,
                 user.getPassword(),
                 user.getAuthorities()
         );

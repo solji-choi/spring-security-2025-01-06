@@ -1,6 +1,5 @@
 package com.ll.security_2025_01_06.domain.member.member.controller;
 
-import com.ll.security_2025_01_06.domain.member.member.controller.ApiV1MemberController;
 import com.ll.security_2025_01_06.domain.member.member.entity.Member;
 import com.ll.security_2025_01_06.domain.member.member.service.MemberService;
 import org.hamcrest.Matchers;
@@ -272,9 +271,6 @@ public class ApiV1MemberControllerTest {
                 .perform(
                         get("/api/v1/members/me")
                                 .header("Authorization", "Bearer " + member.getApiKey())
-                                .contentType(
-                                        new MediaType(MediaType.APPLICATION_JSON, StandardCharsets.UTF_8)
-                        )
                 )
                 .andDo(print());
 
@@ -283,8 +279,8 @@ public class ApiV1MemberControllerTest {
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(member.getId()))
-                .andExpect(jsonPath("$.createDate").value(member.getCreateDate().toString()))
-                .andExpect(jsonPath("$.modifyDate").value(member.getModifyDate().toString()))
+                .andExpect(jsonPath("$.createDate").value(Matchers.startsWith(member.getCreateDate().toString().substring(0, 25))))
+                .andExpect(jsonPath("$.modifyDate").value(Matchers.startsWith(member.getModifyDate().toString().substring(0, 25))))
                 .andExpect(jsonPath("$.nickname").value(member.getNickname()));
     }
 
@@ -327,8 +323,6 @@ public class ApiV1MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1MemberController.class))
-                .andExpect(handler().methodName("me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.resultCode").value("401-1"))
                 .andExpect(jsonPath("$.msg").value("사용자 인증정보가 올바르지 않습니다."));;

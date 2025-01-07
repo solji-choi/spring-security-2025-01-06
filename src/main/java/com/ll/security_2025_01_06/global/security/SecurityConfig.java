@@ -1,5 +1,7 @@
 package com.ll.security_2025_01_06.global.security;
 
+import com.ll.security_2025_01_06.global.rsData.RsData;
+import com.ll.security_2025_01_06.standard.util.Ut;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,9 +22,9 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/h2-console/**")
                                 .permitAll()
-                                //.requestMatchers("/h2-console/login.do") // 상위 룰 우선이기 때문에 의미 없음
-                                //.authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/*/posts/{id:\\d+}", "/api/*/posts", "/api/*/posts/{postId:\\d+}/comments")
+                                .permitAll()
+                                .requestMatchers("/api/*/members/login", "/api/*/members/join")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
@@ -36,7 +38,34 @@ public class SecurityConfig {
                 ).csrf(csrf ->
                         csrf.disable()
                 )
-                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(
+                        exceptionHandling -> exceptionHandling
+                                .authenticationEntryPoint(
+                                        (request, response, authException) -> {
+                                            response.setContentType("application/json;charset=UTF-8");
+
+                                            boolean is401 = authException.getLocalizedMessage().contains("authentication is required");
+
+                                            if (is401) {
+                                                response.setStatus(401);
+                                                response.getWriter().write(
+                                                        Ut.json.toString(
+                                                                new RsData("401-1", "사용자 인증정보가 올바르지 않습니다.")
+                                                        )
+                                                );
+                                                return;
+                                            }
+
+                                            response.setStatus(403);
+                                            response.getWriter().write(
+                                                    Ut.json.toString(
+                                                            new RsData("403-1", request.getRequestURI() + ", " + authException.getLocalizedMessage())
+                                                    )
+                                            );
+                                        }
+                                )
+                );
 
 
         return http.build();
